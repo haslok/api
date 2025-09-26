@@ -1,27 +1,34 @@
+# api_server.py
 from flask import Flask, request, jsonify
-import subprocess
 
 app = Flask(__name__)
 
-@app.route("/command", methods=["POST"])
-def run_command():
-    # استقبال الأمر من المستخدم (JSON)
+latest_command = None
+latest_output = None
+
+@app.route("/send_command", methods=["POST"])
+def send_command():
+    global latest_command
     data = request.get_json()
-    cmd = data.get("command") if data else None
+    latest_command = data.get("command")
+    return jsonify({"status": "command received"})
 
-    if not cmd:
-        return jsonify({"error": "No command provided"}), 400
+@app.route("/get_command", methods=["GET"])
+def get_command():
+    global latest_command
+    return jsonify({"command": latest_command})
 
-    try:
-        # تنفيذ الأمر
-        output = subprocess.check_output(cmd, shell=True)
-        # تحويل البايتات لنص مع تجنب المشاكل في الترميز
-        return jsonify({"output": output.decode('cp1256', errors='ignore')})
-    except subprocess.CalledProcessError as e:
-        return jsonify({"error": f"Command failed: {e}"}), 500
-    except Exception as e:
-        return jsonify({"error": f"Error: {e}"}), 500
+@app.route("/send_output", methods=["POST"])
+def send_output():
+    global latest_output
+    data = request.get_json()
+    latest_output = data.get("output")
+    return jsonify({"status": "output received"})
+
+@app.route("/get_output", methods=["GET"])
+def get_output():
+    global latest_output
+    return jsonify({"output": latest_output})
 
 if __name__ == "__main__":
-    # تشغيل السيرفر على المنفذ 5000
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5000)
