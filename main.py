@@ -28,7 +28,11 @@ def send_output():
 @app.route("/get_output", methods=["GET"])
 def get_output():
     global latest_output
-    return jsonify({"output": latest_output})
+    # حفظ القيمة مؤقتًا
+    output = latest_output
+    # تصفيرها بعد الإرسال
+    latest_output = None
+    return jsonify({"output": output})
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
